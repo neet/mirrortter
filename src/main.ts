@@ -1,9 +1,10 @@
 import Mastodon, { Status } from '@lagunehq/core';
-import Twitter from 'twit';
+import * as htmlToText from 'html-to-text';
+import * as Twitter from 'twit';
 import { getTweetLength } from 'twitter-text';
 import { config } from './conifg';
 
-export class Main {
+class Main {
   protected mastodon = new Mastodon(config.mastodon);
   protected twitter  = new Twitter(config.twitter);
 
@@ -16,19 +17,32 @@ export class Main {
    * @return Nothing
    */
   protected startMirror = async (): Promise<void> => {
-    if (config.use_streaming) {
-      const stream = this.mastodon.streamPublicTimeline();
-      stream.on('update', this.onUpdate);
-      return;
-    }
+    try {
+      const me = await this.mastodon.verfiyCredentials();
 
-    const { id: me } = await this.mastodon.verfiyCredentials();
+      /* tslint:disable no-console */
+      console.log(`Logged in as @${me.username}`);
+      /* tslint:enable no-console */
 
-    setInterval(async () => {
-      for await (const statuses of this.mastodon.fetchAccountStatuses(me)) {
-        statuses.forEach((status) => this.onUpdate(status));
+      if (config.use_streaming) {
+        const stream = this.mastodon.streamUser();
+
+        stream.on('update', (status) => {
+          if (status.account.id === me.id) {
+            this.onUpdate(status);
+          }
+        });
+        return;
       }
-    }, config.fetch_interval);
+
+      setInterval(async () => {
+        for await (const statuses of this.mastodon.fetchAccountStatuses(me.id)) {
+          statuses.forEach((status) => this.onUpdate(status));
+        }
+      }, config.fetch_interval);
+    } catch (e) {
+      throw new Error('Authorization failed');
+    }
   }
 
   /**
@@ -41,10 +55,10 @@ export class Main {
    * @return Result
    */
   protected checkIfInvalidStatus = (status: Status) => (
-    (config.allowed_privacy.includes(status.visibility)) ||
-    (config.mirror_with_url === 'mirror_boosts' && !!status.reblog) ||
-    (config.mirror_with_url === 'mirror_mentions' && !!status.mentions.length) ||
-    (config.mirror_with_url === 'mirror_sensitive' && status.sensitive)
+    (!config.allowed_privacy.includes(status.visibility)) ||
+    (!config.mirror_boosts && !!status.reblog) ||
+    (!config.mirror_mentions && (!!status.mentions.length || !!status.in_reply_to_id)) ||
+    (!config.mirror_sensitive && status.sensitive)
   )
 
   /**
@@ -72,7 +86,7 @@ export class Main {
     const charCount = getTweetLength(content);
     const { ellipsis } = config;
 
-    let transformedContent: string = '';
+    let transformedContent = content;
     const requiredChars = charCount + additionalText.length - ellipsis.length;
 
     if (requiredChars > 240) {
@@ -92,26 +106,36 @@ export class Main {
    * @return Nothing
    */
   protected onUpdate = async (status: Status): Promise<void> => {
-    if (this.checkIfInvalidStatus(status)) {
-      return;
+    try {
+      if (this.checkIfInvalidStatus(status)) {
+        return;
+      }
+
+      let content = htmlToText.fromString(status.content);
+      let additionalText = '';
+
+      // Replace content with spoilter text, if sensitive
+      if (status.spoiler_text) {
+        content = status.spoiler_text;
+      }
+
+      // Append status if required
+      if (this.checkIfUrlRequired(status)) {
+        additionalText += status.url;
+      }
+
+      // Tweet 🐥
+      await this.twitter.post('statuses/update', {
+        status: this.transformContent(content, additionalText),
+      });
+    } catch (e) {
+      /* tslint:disable no-console */
+      console.warn(e.toString());
+      /* tslint:enable no-console */
     }
-
-    let { content } = status;
-    let additionalText = '';
-
-    // Replace content with spoilter text, if sensitive
-    if (status.spoiler_text) {
-      content = status.spoiler_text;
-    }
-
-    // Append status if required
-    if (this.checkIfUrlRequired) {
-      additionalText += status.url;
-    }
-
-    // Tweet 🐥
-    await this.twitter.post('statuses/update', {
-      status: this.transformContent(content, additionalText),
-    });
   }
 }
+
+/* tslint:disable no-unused-expression */
+new Main();
+/* tslint:enable no-unused-expression */

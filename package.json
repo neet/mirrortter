@@ -5,15 +5,17 @@
   "scripts": {
     "test": "tslint -c tslint.yml 'src/**/*.{ts,tsx}'",
     "build": "tsc",
-    "start": "forever start dist/main.js"
+    "start": "yarn run build & forever start dist/main.js"
   },
   "dependencies": {
-    "@lagunehq/core": "^1.3.4",
+    "@lagunehq/core": "^1.3.5",
     "@types/dotenv": "^4.0.3",
+    "@types/html-to-text": "^1.4.31",
     "@types/twit": "^2.2.19",
     "@types/twitter-text": "^2.0.0",
     "dotenv": "^6.0.0",
     "forever": "^0.15.3",
+    "html-to-text": "^4.0.0",
     "twit": "^2.2.11",
     "twitter-text": "^2.0.4",
     "typescript": "^3.0.3"

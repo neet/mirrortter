@@ -10,7 +10,7 @@ First, you need to copy `.env.exmaple` to `.env` which is production environment
 cp .env.example .env
 ```
 
-And specify some authorization information, for more preferences, see *Configuration* section below
+Then specify some authorization information, for more preferences, see [Configuration](#configuration) section below
 ```diff
 +MASTODON_URL=
 +MASTODON_ACCESS_TOKEN=

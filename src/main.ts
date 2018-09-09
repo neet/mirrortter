@@ -1,48 +1,90 @@
-import Mastodon, { Status } from '@lagunehq/core';
+import Mastodon, { Credentials, Status } from '@lagunehq/core';
 import * as htmlToText from 'html-to-text';
-import * as Twitter from 'twit';
+import * as Twit from 'twit';
 import { getTweetLength } from 'twitter-text';
 import { config } from './conifg';
 
 class Main {
+  /** Mastodon API client */
   protected mastodon = new Mastodon(config.mastodon);
-  protected twitter  = new Twitter(config.twitter);
+
+  /** Twitter API client */
+  protected twitter = new Twit(config.twitter);
+
+  /** Ids maps of Mastodon statuses and Twitter statuses */
+  protected idsMap = new Map<string, string>();
 
   constructor () {
-    this.startMirror();
+    this.startMirroring();
   }
 
   /**
    * Starting mirror process
    * @return Nothing
    */
-  protected startMirror = async (): Promise<void> => {
-    try {
-      const me = await this.mastodon.verfiyCredentials();
+  protected startMirroring = async (): Promise<void> => {
+    const me = await this.mastodon.verfiyCredentials();
 
-      /* tslint:disable no-console */
-      console.log(`Logged in as @${me.username}`);
-      /* tslint:enable no-console */
+    /* tslint:disable no-console */
+    console.log(`Logged in as @${me.username}`);
+    /* tslint:enable no-console */
 
-      if (config.use_streaming) {
-        const stream = this.mastodon.streamUser();
-
-        stream.on('update', (status) => {
-          if (status.account.id === me.id) {
-            this.onUpdate(status);
-          }
-        });
-        return;
-      }
-
-      setInterval(async () => {
-        for await (const statuses of this.mastodon.fetchAccountStatuses(me.id)) {
-          statuses.forEach((status) => this.onUpdate(status));
-        }
-      }, config.fetch_interval);
-    } catch (e) {
-      throw new Error('Authorization failed');
+    if (config.use_streaming) {
+      this.startStreaming(me);
+    } else {
+      this.startPolling(me);
     }
+  }
+
+  /**
+   * Starting streaming and bind result to the method
+   * @param me Result of verify_credentials
+   * @return nothing
+   */
+  protected startStreaming = (me: Credentials) => {
+    const stream = this.mastodon.streamUser();
+
+    stream.on('update', (status) => {
+      if (status.account.id === me.id) {
+        this.onUpdate(status);
+      }
+    });
+
+    stream.on('delete', (id) => {
+      this.onDelete(id);
+    });
+
+    stream.on('connectFailed', () => {
+      throw new Error('WebSocket connection failed');
+    });
+  }
+
+  /**
+   * Starting polling and bind result to this.onUpdate
+   * @param me Result of verify_credentials
+   * @return nothing
+   */
+  protected startPolling = async (me: Credentials) => {
+    // Initialize since_id with latest id of status
+    let since_id = (await this.mastodon.fetchAccountStatuses(me.id).next()).value[0].id;
+
+    setInterval(async () => {
+      try {
+        const { value: statuses } = await this.mastodon.fetchAccountStatuses(me.id, { since_id }).next();
+
+        if (statuses.length) {
+          since_id = statuses[0].id;
+
+          statuses.reverse().forEach((status) => {
+            this.onUpdate(status);
+          });
+        }
+      } catch (error) {
+        /* tslint:disable no-console */
+        console.warn(error);
+        /* tslint:enable no-console */
+      }
+    }, config.fetch_interval);
   }
 
   /**
@@ -125,12 +167,37 @@ class Main {
       }
 
       // Tweet 🐥
-      await this.twitter.post('statuses/update', {
+      const tweet = await this.twitter.post('statuses/update', {
         status: this.transformContent(content, additionalText),
       });
-    } catch (e) {
+
+      // Mapping created tweet's id and delete it 1 hour later
+      this.idsMap.set(status.id, (tweet.data as Twit.Twitter.Status).id_str);
+      setTimeout(() => this.idsMap.delete(status.id), 1000 * 60 * 60);
+
+    } catch (error) {
       /* tslint:disable no-console */
-      console.warn(e.toString());
+      console.warn(error);
+      /* tslint:enable no-console */
+    }
+  }
+
+  /**
+   * Handle deleted status
+   * @param id Status id which deleted
+   * @return nothig
+   */
+  protected onDelete = async (id: string): Promise<void> => {
+    try {
+      const tweetId = this.idsMap.get(id);
+
+      if (tweetId) {
+        await this.twitter.post('statuses/destroy/:id', { id: tweetId });
+        this.idsMap.delete(id);
+      }
+    } catch (error) {
+      /* tslint:disable no-console */
+      console.warn(error);
       /* tslint:enable no-console */
     }
   }

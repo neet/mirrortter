@@ -15,15 +15,15 @@ const { env } = process;
 const boolify = (state: any) => state === 'true' ? true : false;
 
 export const config = {
-  use_streaming: boolify(env.USE_STREAMING) || true,
+  use_streaming: boolify(env.USE_STREAMING || 'true'),
 
-  mirror_boosts: boolify(env.MIRROR_BOOSTS) || false,
-  mirror_mentions: boolify(env.MIRROR_MENTIONS) || false,
-  mirror_sensitive: boolify(env.MIRROR_SENSITIVE) || false,
+  mirror_boosts: boolify(env.MIRROR_BOOSTS || 'false'),
+  mirror_mentions: boolify(env.MIRROR_MENTIONS || 'false'),
+  mirror_sensitive: boolify(env.MIRROR_SENSITIVE || 'false'),
 
   mirror_with_url: env.MIRROR_WITH_URL || 'never' as MirrorWithUrl,
 
-  fetch_interval: Number(env.FETCH_INTERVAL) || 60000,
+  fetch_interval: Number(env.FETCH_INTERVAL || '60000'),
 
   allowed_privacy: (env.ALLOWED_PRIVACY as string || 'public unlisted private direct').split(' ') as StatusVisibility[],
 

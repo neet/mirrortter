@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@lagunehq/core@^1.3.5":
-  version "1.3.5"
-  resolved "https://registry.yarnpkg.com/@lagunehq/core/-/core-1.3.5.tgz#bb0c2c658da94802312bfeb799c48229d93fad7c"
+"@lagunehq/core@^1.3.6":
+  version "1.3.6"
+  resolved "https://registry.yarnpkg.com/@lagunehq/core/-/core-1.3.6.tgz#589916e111236e440d6bf73780e31ccd04ccdaa0"
   dependencies:
     "@types/http-link-header" "^0.6.2"
     "@types/node-fetch" "^2.1.2"

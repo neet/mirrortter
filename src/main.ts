@@ -97,7 +97,7 @@ class Main {
    * @return Result
    */
   protected checkIfInvalidStatus = (status: Status) => (
-    (!config.allowed_privacy.includes(status.visibility)) ||
+    (!config.allowed_visibility.includes(status.visibility)) ||
     (!config.mirror_boosts && !!status.reblog) ||
     (!config.mirror_mentions && (!!status.mentions.length || !!status.in_reply_to_id)) ||
     (!config.mirror_sensitive && status.sensitive)

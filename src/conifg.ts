@@ -25,7 +25,7 @@ export const config = {
 
   fetch_interval: Number(env.FETCH_INTERVAL || '60000'),
 
-  allowed_privacy: (env.ALLOWED_PRIVACY as string || 'public unlisted private direct').split(' ') as StatusVisibility[],
+  allowed_visibility: (env.ALLOWED_VISIBILITY as string || 'public unlisted private direct').split(' ') as StatusVisibility[],
 
   ellipsis: env.ELLIPSIS || '...' as string,
 

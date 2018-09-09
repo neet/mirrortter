@@ -25,22 +25,20 @@ export const config = {
 
   fetch_interval: Number(env.FETCH_INTERVAL) || 60000,
 
-  allowed_privacy:
-    (env.ALLOWED_PRIVACY as string).split(' ')
-    || ['public', 'unlisted', 'private', 'direct'] as StatusVisibility[],
+  allowed_privacy: (env.ALLOWED_PRIVACY as string || 'public unlisted private direct').split(' ') as StatusVisibility[],
 
   ellipsis: env.ELLIPSIS || '...' as string,
 
   mastodon: {
     url: env.MASTODON_URL as string,
-    access_token: env.MASTODON_ACCESS_TOKEN as string,
-    streaming_url: env.MASTODON_STREAMING_URL as string,
+    token: env.MASTODON_ACCESS_TOKEN as string,
+    streamingUrl: env.MASTODON_STREAMING_URL as string,
   },
 
   twitter: {
     consumer_key: env.TWITTER_CONSUMER_KEY as string,
     consumer_secret: env.TWITTER_CONSUMER_SECRET as string,
     access_token: env.TWITTER_ACCESS_TOKEN as string,
-    token_secret: env.TWITTER_TOKEN_SECRET as string,
+    access_token_secret: env.TWITTER_ACCESS_TOKEN_SECRET as string,
   },
 };

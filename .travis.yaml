@@ -1,0 +1,27 @@
+language: node_js
+
+node_js:
+  - "10"
+
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.cache/yarn
+    - node_modules
+
+branches:
+  only:
+    - master
+
+notifications:
+  email: true
+
+install:
+  - yarn
+
+before_script:
+  - yarn run build
+
+script:
+  - yarn run test:lint

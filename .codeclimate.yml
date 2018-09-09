@@ -5,6 +5,6 @@ checks:
 plugins:
   tslint:
     enabled: true
-    config: tslint.yaml
+    config: tslint.yml
 exclude_patterns:
 - "**/__tests__/"

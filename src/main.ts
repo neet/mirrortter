@@ -156,7 +156,9 @@ class Main {
         return;
       }
 
-      let content = htmlToText.fromString(status.content);
+      let content = htmlToText.fromString(status.content, {
+        hideLinkHrefIfSameAsText: true,
+      });
       let additionalText = '';
 
       // Replace content with spoilter text, if sensitive

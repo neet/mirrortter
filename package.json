@@ -18,6 +18,7 @@
     "@types/twitter-text": "^2.0.0",
     "dotenv": "^6.0.0",
     "forever": "^0.15.3",
+    "html2plaintext": "^2.0.1",
     "twit": "^2.2.11",
     "twitter-text": "^2.0.4",
     "typescript": "^3.0.3"

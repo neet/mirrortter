@@ -1,5 +1,5 @@
 import Mastodon, { Credentials, Status } from '@lagunehq/core';
-import h2t from 'html2plaintext';
+import * as htmlToText from 'html-to-text';
 import * as Twit from 'twit';
 import { getTweetLength } from 'twitter-text';
 import { config } from './conifg';
@@ -156,7 +156,7 @@ class Main {
         return;
       }
 
-      let content = h2t(status.content);
+      let content = htmlToText.fromString(status.content);
       let additionalText = '';
 
       // Replace content with spoilter text, if sensitive

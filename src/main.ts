@@ -125,11 +125,14 @@ class Main {
    * @param additionalText Additional text append
    */
   protected transformContent = (content: string, additionalText: string = ''): string => {
-    const charCount = getTweetLength(content);
     const { ellipsis } = config;
 
     let transformedContent = content;
-    const requiredChars = charCount + additionalText.length - ellipsis.length;
+
+    const requiredChars
+      = getTweetLength(content)
+      + getTweetLength(additionalText)
+      + getTweetLength(ellipsis);
 
     if (requiredChars > 240) {
       transformedContent += content.substr(0, requiredChars);

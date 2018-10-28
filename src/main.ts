@@ -1,10 +1,13 @@
-import Mastodon, { Credentials, Status } from '@lagunehq/core';
+import Mastodon, { AccountCredentials, Status } from '@lagunehq/core';
 import * as htmlToText from 'html-to-text';
 import * as Twit from 'twit';
-import { getTweetLength } from 'twitter-text';
 import { config } from './conifg';
+import { checkIfInvalidStatus } from './utils/checkIfInvalidStatus';
+import { roundContentWithLimit } from './utils/roundContentWithLimit';
+import { shouldInsertStatusUrl } from './utils/shouldInsertStatusUrl';
 
 class Main {
+
   /** Mastodon API client */
   protected mastodon = new Mastodon(config.mastodon);
 
@@ -41,7 +44,7 @@ class Main {
    * @param me Result of verify_credentials
    * @return nothing
    */
-  protected startStreaming = (me: Credentials) => {
+  protected startStreaming = (me: AccountCredentials) => {
     const stream = this.mastodon.streamUser();
 
     stream.on('update', (status) => {
@@ -64,7 +67,7 @@ class Main {
    * @param me Result of verify_credentials
    * @return nothing
    */
-  protected startPolling = async (me: Credentials) => {
+  protected startPolling = async (me: AccountCredentials) => {
     // Initialize since_id with latest id of status
     let since_id = (await this.mastodon.fetchAccountStatuses(me.id).next()).value[0].id;
 
@@ -88,102 +91,43 @@ class Main {
   }
 
   /**
-   * Return `false` if status match with either situation:
-   * - `ALLOWED_VISIBILITY` doesn't contain status's visibility type
-   * - The status is a reblogged one, and `MIRROR_BOOSTS` is false
-   * - The status is posted with CW/NSFW, and `MIRROR_SENSITIVE` is false
-   * - The status is including any mentions
-   * @param status Status that posted
-   * @return Result
-   */
-  protected checkIfInvalidStatus = (status: Status) => (
-    (!config.allowed_visibility.includes(status.visibility)) ||
-    (!config.mirror_boosts && !!status.reblog) ||
-    (!config.mirror_mentions && (!!status.mentions.length || !!status.in_reply_to_id)) ||
-    (!config.mirror_sensitive && status.sensitive)
-  )
-
-  /**
-   * Return `true` if status match with either situation:
-   * - if with_url is `always`
-   * - if with_url is `only_media` and any media attached
-   * - if with_url is `only_sensitive` and status is a sensitive content
-   * - if with_url is `media_or_sensitive` and status is a sensitive and/or posted with media
-   * @param status Status that posted
-   * @return Result
-   */
-  protected checkIfUrlRequired = (status: Status) => (
-    (config.mirror_with_url === 'always') ||
-    (config.mirror_with_url === 'only_media' && !!status.media_attachments.length) ||
-    (config.mirror_with_url === 'only_sensitive' && status.sensitive) ||
-    (config.mirror_with_url === 'media_or_sensitive' && (!!status.media_attachments.length || status.sensitive))
-  )
-
-  /**
-   * Transform Mastodon status to Twitter compatible form
-   * @param content Content of a status
-   * @param additionalText Additional text append
-   */
-  protected transformContent = (content: string, additionalText: string = ''): string => {
-    const { ellipsis } = config;
-
-    let transformedContent = content;
-
-    const requiredChars
-      = getTweetLength(content)
-      + getTweetLength(additionalText)
-      + getTweetLength(ellipsis);
-
-    if (requiredChars > 240) {
-      transformedContent += content.substr(0, requiredChars);
-      transformedContent += additionalText;
-      transformedContent += ellipsis;
-    } else {
-      transformedContent += additionalText;
-    }
-
-    return transformedContent;
-  }
-
-  /**
    * Handle new status
    * @param status status that posted
    * @return Nothing
    */
   protected onUpdate = async (status: Status): Promise<void> => {
     try {
-      if (this.checkIfInvalidStatus(status)) {
+      if (checkIfInvalidStatus(status)) {
         return;
       }
 
-      let content = htmlToText.fromString(status.content, {
-        hideLinkHrefIfSameAsText: true,
-      });
-      let additionalText = '';
+      const content = status.spoiler_text
+        ? status.spoiler_text
+        : htmlToText.fromString(status.content, { hideLinkHrefIfSameAsText: true });
 
-      // Replace content with spoilter text, if sensitive
-      if (status.spoiler_text) {
-        content = status.spoiler_text;
-      }
+      const additionalContents: string[] = [];
 
       // Append status if required
-      if (this.checkIfUrlRequired(status)) {
-        additionalText += status.url;
+      if (shouldInsertStatusUrl(status) && status.url) {
+        additionalContents.push(status.url);
       }
 
       // Tweet 🐥
-      const tweet = await this.twitter.post('statuses/update', {
-        status: this.transformContent(content, additionalText),
-      });
+      const tweetData = await this.twitter.post('statuses/update', {
+        status: roundContentWithLimit(content, additionalContents),
+      })
+        .then((tweet) => tweet.data as Twit.Twitter.Status);
 
       // Mapping created tweet's id and delete it 1 hour later
-      this.idsMap.set(status.id, (tweet.data as Twit.Twitter.Status).id_str);
-      setTimeout(() => this.idsMap.delete(status.id), 1000 * 60 * 60);
+      this.idsMap.set(status.id, tweetData.id_str);
+
+      setTimeout(() => {
+        this.idsMap.delete(status.id);
+      }, 1000 * 60 * 60);
 
     } catch (error) {
-      /* tslint:disable no-console */
+      // tslint:disable-next-line no-console
       console.warn(error);
-      /* tslint:enable no-console */
     }
   }
 
@@ -201,13 +145,11 @@ class Main {
         this.idsMap.delete(id);
       }
     } catch (error) {
-      /* tslint:disable no-console */
+      // tslint:disable-next-line no-console
       console.warn(error);
-      /* tslint:enable no-console */
     }
   }
 }
 
-/* tslint:disable no-unused-expression */
+// tslint:disable-next-line no-unused-expression
 new Main();
-/* tslint:enable no-unused-expression */

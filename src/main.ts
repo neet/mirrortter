@@ -28,9 +28,8 @@ class Main {
   protected startMirroring = async (): Promise<void> => {
     const me = await this.mastodon.verfiyCredentials();
 
-    /* tslint:disable no-console */
+    // tslint:disable-next-line no-console
     console.log(`Logged in as @${me.username}`);
-    /* tslint:enable no-console */
 
     if (config.use_streaming) {
       this.startStreaming(me);
@@ -83,9 +82,8 @@ class Main {
           });
         }
       } catch (error) {
-        /* tslint:disable no-console */
+        // tslint:disable-next-line no-console
         console.warn(error);
-        /* tslint:enable no-console */
       }
     }, config.fetch_interval);
   }

@@ -95,7 +95,7 @@ class Main {
    */
   protected onUpdate = async (status: Status): Promise<void> => {
     try {
-      if (checkIfValidStatus(status)) {
+      if (!checkIfValidStatus(status)) {
         return;
       }
 

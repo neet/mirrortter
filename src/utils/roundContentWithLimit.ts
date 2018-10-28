@@ -18,11 +18,11 @@ export const roundContentWithLimit = (content: string, additionalContents: strin
     ellipsis,
   ].join(' '));
 
-  const omittableLength = contentLength - [joinedAdditionalContents, ellipsis].join(' ').length;
+  const shortageLength = limit - getTweetLength([joinedAdditionalContents, ellipsis].join(' '));
 
   if (contentLength > limit) {
     roundedContent = [
-      content.substr(0, omittableLength),
+      content.substr(0, shortageLength),
       joinedAdditionalContents,
       ellipsis,
     ].join(' ');

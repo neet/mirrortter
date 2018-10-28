@@ -25,3 +25,4 @@ before_script:
 
 script:
   - yarn run test:lint
+  - yarn run test:jest

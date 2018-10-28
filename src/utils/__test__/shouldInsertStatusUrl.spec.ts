@@ -67,33 +67,33 @@ describe('shouldInsertStatusUrl', () => {
     expect(result).toBe(false);
   });
 
-  it ('Returns true when the config is "media_or_senstive" and the status has media', () => {
+  it ('Returns true when the config is "media_or_sensitive" and the status has media', () => {
     const status = {
       id: '1',
       media_attachments: ['12345'],
     } as any as Status;
 
     const result = shouldInsertStatusUrl(status, {
-      mirror_with_url: 'media_or_senstive',
+      mirror_with_url: 'media_or_sensitive',
     });
 
     expect(result).toBe(true);
   });
 
-  it ('Returns true when the config is "media_or_senstive" and the status is sensitive', () => {
+  it ('Returns true when the config is "media_or_sensitive" and the status is sensitive', () => {
     const status = {
       id: '1',
       sensitive: true,
     } as any as Status;
 
     const result = shouldInsertStatusUrl(status, {
-      mirror_with_url: 'media_or_senstive',
+      mirror_with_url: 'media_or_sensitive',
     });
 
     expect(result).toBe(true);
   });
 
-  it ('Returns false when the config is "media_or_senstive" and neither the status has media nor the status is sensitive', () => {
+  it ('Returns false when the config is "media_or_sensitive" and neither the status has media nor the status is sensitive', () => {
     const status = {
       id: '1',
       sensitive: false,

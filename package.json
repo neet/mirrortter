@@ -4,7 +4,7 @@
   "main": "dist/main.js",
   "scripts": {
     "test:lint": "tslint -c tslint.yml 'src/**/*.{ts,tsx}'",
-    "test:jest": "jest --coverage --config=jest.config.json",
+    "test:jest": "jest --coverage",
     "build": "tsc",
     "start": "yarn run build & forever start dist/main.js"
   },

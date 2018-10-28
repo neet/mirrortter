@@ -2,9 +2,5 @@ version: "2"
 checks:
   similar-code:
     enabled: false
-plugins:
-  tslint:
-    enabled: true
-    config: tslint.yml
 exclude_patterns:
 - "**/__tests__/"

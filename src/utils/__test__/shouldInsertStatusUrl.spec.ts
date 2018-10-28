@@ -6,6 +6,8 @@ describe('shouldInsertStatusUrl', () => {
   it ('Returns true when the config is "always"', () => {
     const status = {
       id: '1',
+      mentions: [],
+      media_attachments: [],
     } as any as Status;
 
     const result = shouldInsertStatusUrl(status, {
@@ -18,6 +20,7 @@ describe('shouldInsertStatusUrl', () => {
   it ('Returns true when the config is "only_media" and has media', () => {
     const status = {
       id: '1',
+      mentions: [],
       media_attachments: ['12345'],
     } as any as Status;
 
@@ -31,6 +34,7 @@ describe('shouldInsertStatusUrl', () => {
   it ('Returns false when the config is "only_media" and has no media', () => {
     const status = {
       id: '1',
+      mentions: [],
       media_attachments: [],
     } as any as Status;
 
@@ -45,6 +49,8 @@ describe('shouldInsertStatusUrl', () => {
     const status = {
       id: '1',
       sensitive: true,
+      mentions: [],
+      media_attachments: [],
     } as any as Status;
 
     const result = shouldInsertStatusUrl(status, {
@@ -58,6 +64,8 @@ describe('shouldInsertStatusUrl', () => {
     const status = {
       id: '1',
       sensitive: false,
+      mentions: [],
+      media_attachments: [],
     } as any as Status;
 
     const result = shouldInsertStatusUrl(status, {
@@ -70,6 +78,7 @@ describe('shouldInsertStatusUrl', () => {
   it ('Returns true when the config is "media_or_sensitive" and the status has media', () => {
     const status = {
       id: '1',
+      mentions: [],
       media_attachments: ['12345'],
     } as any as Status;
 
@@ -84,6 +93,8 @@ describe('shouldInsertStatusUrl', () => {
     const status = {
       id: '1',
       sensitive: true,
+      mentions: [],
+      media_attachments: [],
     } as any as Status;
 
     const result = shouldInsertStatusUrl(status, {
@@ -97,6 +108,7 @@ describe('shouldInsertStatusUrl', () => {
     const status = {
       id: '1',
       sensitive: false,
+      mentions: [],
       media_attachments: [],
     } as any as Status;
 

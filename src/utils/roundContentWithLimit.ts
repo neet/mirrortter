@@ -12,12 +12,13 @@ export const roundContentWithLimit = (content: string, additionalContents: strin
 
   let roundedContent = '';
 
-  const contentLength
-    = getTweetLength(content)
-    + getTweetLength(joinedAdditionalContents)
-    + getTweetLength(ellipsis);
+  const contentLength = getTweetLength([
+    content,
+    joinedAdditionalContents,
+    ellipsis,
+  ].join(' '));
 
-  const omittableLength = [joinedAdditionalContents, ellipsis].join(' ').length;
+  const omittableLength = contentLength - [joinedAdditionalContents, ellipsis].join(' ').length;
 
   if (contentLength > limit) {
     roundedContent = [

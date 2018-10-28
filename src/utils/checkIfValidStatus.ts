@@ -10,13 +10,13 @@ import { config as defaultConfig } from '../conifg';
  * @param status Status that posted
  * @return Result
  */
-export const checkIfInvalidStatus = (status: Status, option?: Partial<typeof defaultConfig>) => {
+export const checkIfValidStatus = (status: Status, option?: Partial<typeof defaultConfig>) => {
   const config = { ...defaultConfig, ...option };
 
   return (
-    (!config.allowed_visibility.includes(status.visibility)) ||
-    (!config.mirror_boosts && !!status.reblog) ||
-    (!config.mirror_mentions && (!!status.mentions.length || !!status.in_reply_to_id)) ||
-    (!config.mirror_sensitive && status.sensitive)
+    config.allowed_visibility.includes(status.visibility)
+    && !(!config.mirror_boosts    && status.reblog)
+    && !(!config.mirror_sensitive && status.sensitive)
+    && !(!config.mirror_mentions  && (status.mentions.length !== 0 || !!status.in_reply_to_id))
   );
 };

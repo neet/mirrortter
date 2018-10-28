@@ -2,7 +2,7 @@ import Mastodon, { AccountCredentials, Status } from '@lagunehq/core';
 import * as htmlToText from 'html-to-text';
 import * as Twit from 'twit';
 import { config } from './conifg';
-import { checkIfInvalidStatus } from './utils/checkIfInvalidStatus';
+import { checkIfValidStatus } from './utils/checkIfValidStatus';
 import { roundContentWithLimit } from './utils/roundContentWithLimit';
 import { shouldInsertStatusUrl } from './utils/shouldInsertStatusUrl';
 
@@ -97,7 +97,7 @@ class Main {
    */
   protected onUpdate = async (status: Status): Promise<void> => {
     try {
-      if (checkIfInvalidStatus(status)) {
+      if (checkIfValidStatus(status)) {
         return;
       }
 
